@@ -1,9 +1,12 @@
-h1{
-    color: pink;
-    bottom: 100;
+
+table.T01{
+    color: rgb(209, 98, 118);
 }
 
-p{
-    color: red;
-    background-origin: green;
+table.T02{
+    color: rgb(228, 13, 192);
+}
+
+table.T03{
+    color: rgb(126, 11, 235);
 }
