@@ -44,6 +44,20 @@ li{
     padding: 0 12px;
 }
 
+.others li:first-child{
+    position: relative;
+}
+
+.others li:first-child input{
+    width: 100%;
+}
+
+.others li:first-child i {
+    position: absolute;
+    right: 10px;
+}
+
+
 #pornhub{
     background-color: black;
     padding: 2px; 
@@ -59,3 +73,4 @@ li{
     padding: 3px;
     border-radius: 4px;
 }
+
