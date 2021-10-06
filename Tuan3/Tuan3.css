@@ -1,0 +1,23 @@
+
+.logo{
+    height: 150px;
+    width: 500px;
+    float: left;
+}
+.logo > img{
+    padding-left: 250px;
+    height: 150px;
+
+}
+.name{
+    text-align: center;
+    height: 150px;
+    width: 1200px;
+    padding-top: 15px;
+}
+.name > h1{
+    color: steelblue;
+    font-size: 36px;
+}
+
+    
