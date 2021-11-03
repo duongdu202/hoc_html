@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="slide.css" />
+    <title>IT PTIT</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+      }
+      header {
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .ke {
+        background-image: linear-gradient( black, white);
+        height: 5px;
+      }
+      header h2 {
+        color:black;
+        display: inline-block;
+        margin-left: 30px;
+      }
+      header nav {
+        display: flex;
+      }
+      header nav a {
+        margin-right: 30px;
+        color: black;
+        text-decoration: none;
+      }
+      header nav a:first-child {
+        color: red;
+      }
+      .products {
+        background-color: #99e1f6;
+        width: 80%;
+        display: flex;
+        flex-wrap: wrap;
+        margin: 50px auto;
+        border-radius: 10px;
+      }
+      .product {
+        margin: 20px;
+        flex: 25%;
+        height: 250px;
+      }
+      .product .images {
+        height: 90%;
+        background-color: gold;
+        border-radius: 10px;
+
+      }
+      .product .text p{
+        size: 30px;
+        text-align: center;
+      }
+      @media screen and (max-width: 930px) {
+        .products{
+          flex-direction: column;
+        }
+        .product{
+          flex: none;
+        }
+      }
+      @media screen and (max-width: 695px) {
+        .main{
+          flex-direction: column;
+        }
+        .left{
+          width: 100%;
+        }
+        .right{
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h2>ITPTIT</h2>
+      <nav>
+        <a href="#">Trang chủ</a>
+        <a href="#">Giới thiệu</a>
+        <a href="#">Thành tích</a>
+        <a href="#">Sự kiện</a>
+      </nav>
+    </header>
+    <div class="ke"></div>
+    <div class="body">
+    <div class="products">
+        <div class="product">
+            <div class="images"></div>
+            <div class="text"><p>Team 1</p></div>
+        </div>
+        
+        <div class="product">
+            <div class="images"></div>
+            <div class="text"><p>Team 2</p></div>
+        </div>
+
+        <div class="product">
+            <div class="images"></div>
+            <div class="text"><p>Team 3</p></div>
+        </div>
+
+        <div class="product">
+            <div class="images"></div>
+            <div class="text"><p>Team 4</p></div>
+        </div>
+        
+        <div class="product">
+            <div class="images"></div>
+            <div class="text"><p>Team 5</p></div>
+        </div>
+        <div class="product"></div>
+    </div>
+    </div>
+  </body>
+</html>
