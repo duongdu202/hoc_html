@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiết kế mặt bằng căn hộ</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --bg-color: #f1f5f9;
+            --panel-bg: #ffffff;
+            --border-color: #334155; /* Màu tường đậm như thiết kế */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+
+        body { display: flex; height: 100vh; background-color: var(--bg-color); overflow: hidden; }
+
+        /* Bảng điều khiển */
+        #control-panel {
+            width: 300px;
+            background: var(--panel-bg);
+            border-right: 2px solid #cbd5e1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.8rem; font-weight: bold; color: #475569; }
+        input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; }
+        button { 
+            background: var(--primary-color); color: white; border: none; 
+            padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        button:hover { background: #4338ca; }
+        .delete-btn { background: #ef4444; margin-top: 10px; }
+
+        /* Khu vực hiển thị phòng */
+        #canvas-outer {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Layout căn hộ theo thiết kế */
+        #apartment-layout {
+            display: grid;
+            grid-template-columns: 600px 250px; /* Phòng chính rộng 600, khối phụ rộng 250 */
+            grid-template-rows: 200px 200px;    /* Toilet cao 200, Bếp cao 200 */
+            position: relative;
+            background-color: white;
+        }
+
+        .room {
+            border: 2px solid var(--border-color);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1e293b;
+            background-color: white;
+        }
+
+        #main-room {
+            grid-row: 1 / span 2; /* Chiếm cả 2 hàng bên trái */
+            border-right: none;   /* Xóa viền phải để thông với Bếp/WC nếu cần hoặc giữ nguyên */
+        }
+
+        #toilet {
+            border-left: 2px solid var(--border-color);
+        }
+
+        #kitchen {
+            border-left: 2px solid var(--border-color);
+            border-top: none; /* Tránh trùng viền với toilet */
+        }
+
+        /* Nhãn Cửa vào */
+        .entrance-label {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            border: 2px solid var(--border-color);
+            padding: 2px 10px;
+            background: white;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        /* Khối nội thất */
+        .furniture-block {
+            position: absolute;
+            background-color: rgba(99, 102, 241, 0.3);
+            border: 2px solid var(--primary-color);
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        .furniture-block.selected {
+            border-color: #f59e0b;
+            background-color: rgba(245, 158, 11, 0.4);
+        }
+
+        .dim-badge {
+            position: absolute;
+            top: -20px;
+            background: #1e293b;
+            color: white;
+            padding: 1px 4px;
+            font-size: 0.65rem;
+            border-radius: 3px;
+            display: none;
+        }
+        .furniture-block.selected .dim-badge { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="control-panel">
+        <h2 style="font-size: 1.1rem;">Nội thất</h2>
+        
+        <div class="form-group">
+            <label>Tên</label>
+            <input type="text" id="f-name" value="Sofa">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Rộng (cm)</label>
+                <input type="number" id="f-width" value="180">
+            </div>
+            <div class="form-group">
+                <label>Sâu (cm)</label>
+                <input type="number" id="f-height" value="80">
+            </div>
+        </div>
+
+        <button id="add-btn">Thêm khối mới</button>
+
+        <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+        
+        <label>Sửa nhanh khối chọn:</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <input type="number" id="edit-w" placeholder="W" disabled>
+            <input type="number" id="edit-h" placeholder="H" disabled>
+        </div>
+        <button id="delete-btn" class="delete-btn" style="display:none;">Xóa khối</button>
+    </div>
+
+    <div id="canvas-outer">
+        <div id="apartment-layout">
+            
+            <div id="main-room" class="room">Phòng chính</div>
+            
+            <div id="toilet" class="room">Nhà vệ sinh</div>
+            
+            <div id="kitchen" class="room">Bếp</div>
+
+            <div class="entrance-label">Cửa vào</div>
+
+            </div>
+    </div>
+
+    <script>
+        const layout = document.getElementById('apartment-layout');
+        const addBtn = document.getElementById('add-btn');
+        const deleteBtn = document.getElementById('delete-btn');
+        const editW = document.getElementById('edit-w');
+        const editH = document.getElementById('edit-h');
+
+        let selectedBlock = null;
+
+        addBtn.addEventListener('click', () => {
+            const name = document.getElementById('f-name').value;
+            const w = document.getElementById('f-width').value;
+            const h = document.getElementById('f-height').value;
+            createBlock(name, w, h);
+        });
+
+        function createBlock(name, w, h) {
+            const block = document.createElement('div');
+            block.className = 'furniture-block';
+            block.style.width = w + 'px';
+            block.style.height = h + 'px';
+            block.style.left = '20px';
+            block.style.top = '20px';
+            
+            block.innerHTML = `<span>${name}</span><div class="dim-badge">${w}x${h}</div>`;
+
+            block.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                select(block);
+                startDragging(e, block);
+            });
+
+            layout.appendChild(block);
+            select(block);
+        }
+
+        function startDragging(e, block) {
+            let startX = e.clientX;
+            let startY = e.clientY;
+            let initialLeft = block.offsetLeft;
+            let initialTop = block.offsetTop;
+
+            function doDrag(e) {
+                let dx = e.clientX - startX;
+                let dy = e.clientY - startY;
+                
+                let newX = initialLeft + dx;
+                let newY = initialTop + dy;
+
+                // Giới hạn trong toàn bộ mặt bằng layout
+                const maxX = layout.offsetWidth - block.offsetWidth;
+                const maxY = layout.offsetHeight - block.offsetHeight;
+
+                block.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+                block.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
+            }
+
+            function stopDrag() {
+                document.removeEventListener('mousemove', doDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function select(block) {
+            if(selectedBlock) selectedBlock.classList.remove('selected');
+            selectedBlock = block;
+            selectedBlock.classList.add('selected');
+            
+            deleteBtn.style.display = 'block';
+            editW.disabled = false;
+            editH.disabled = false;
+            editW.value = parseInt(block.style.width);
+            editH.value = parseInt(block.style.height);
+        }
+
+        layout.addEventListener('mousedown', () => {
+            if(selectedBlock) selectedBlock.classList.remove('selected');
+            selectedBlock = null;
+            deleteBtn.style.display = 'none';
+            editW.disabled = true;
+            editH.disabled = true;
+        });
+
+        editW.addEventListener('input', () => {
+            if(selectedBlock) {
+                selectedBlock.style.width = editW.value + 'px';
+                selectedBlock.querySelector('.dim-badge').innerText = `${editW.value}x${editH.value}`;
+            }
+        });
+
+        editH.addEventListener('input', () => {
+            if(selectedBlock) {
+                selectedBlock.style.height = editH.value + 'px';
+                selectedBlock.querySelector('.dim-badge').innerText = `${editW.value}x${editH.value}`;
+            }
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            if(selectedBlock) {
+                selectedBlock.remove();
+                selectedBlock = null;
+                deleteBtn.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

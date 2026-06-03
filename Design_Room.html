@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Sắp xếp Nội thất 2D</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --bg-color: #f8fafc;
+            --panel-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: #1e293b;
+            overflow: hidden;
+        }
+
+        /* Thanh điều khiển bên trái */
+        #control-panel {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #4338ca;
+        }
+
+        button.delete-btn {
+            background-color: #ef4444;
+            margin-top: auto;
+        }
+
+        button.delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* Khu vực không gian phòng */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #room-canvas {
+            width: 800px;
+            height: 600px;
+            background-color: #ffffff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            /* Tạo lưới caro để dễ căn tọa độ */
+            background-image: linear-gradient(#f1f5f9 1px, transparent 1px),
+                              linear-gradient(90deg, #f1f5f9 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Khối nội thất */
+        .furniture-block {
+            position: absolute;
+            background-color: rgba(99, 102, 241, 0.2);
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #312e81;
+            text-align: center;
+            user-select: none;
+            box-sizing: border-box;
+            padding: 5px;
+        }
+
+        .furniture-block.selected {
+            border: 2px dashed #f59e0b;
+            background-color: rgba(245, 158, 11, 0.2);
+            color: #78350f;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .dimensions-badge {
+            position: absolute;
+            bottom: -20px;
+            background: #334155;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            pointer-events: none;
+            display: none;
+        }
+
+        .furniture-block.selected .dimensions-badge {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="control-panel">
+        <div>
+            <h2>Thêm Nội Thất</h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">Tỷ lệ mặc định: 10px = 10cm</p>
+        </div>
+
+        <div class="form-group">
+            <label for="f-name">Tên vật dụng</label>
+            <input type="text" id="f-name" value="Bàn làm việc">
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="f-width">Chiều rộng (cm)</label>
+                <input type="number" id="f-width" value="120" min="20">
+            </div>
+            <div class="form-group">
+                <label for="f-height">Chiều sâu (cm)</label>
+                <input type="number" id="f-height" value="60" min="20">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="f-color">Màu sắc hiển thị</label>
+            <select id="f-color">
+                <option value="rgba(99, 102, 241, 0.2)" data-border="#4f46e5">Xanh dương</option>
+                <option value="rgba(16, 185, 129, 0.2)" data-border="#10b981">Xanh lá</option>
+                <option value="rgba(239, 68, 68, 0.2)" data-border="#ef4444">Đỏ</option>
+                <option value="rgba(107, 114, 128, 0.2)" data-border="#6b7280">Xám</option>
+                <option value="rgba(217, 119, 6, 0.2)" data-border="#d97706">Nâu gỗ</option>
+            </select>
+        </div>
+
+        <button id="add-btn">Thêm vào phòng</button>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 10px 0;">
+
+        <div>
+            <h2>Chỉnh sửa khối đang chọn</h2>
+            <p style="font-size: 0.8rem; color: #64748b;">Click vào một khối trong phòng để thay đổi kích thước nhanh hoặc xóa.</p>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="edit-width">Rộng (cm)</label>
+                <input type="number" id="edit-width" disabled>
+            </div>
+            <div class="form-group">
+                <label for="edit-height">Sâu (cm)</label>
+                <input type="number" id="edit-height" disabled>
+            </div>
+        </div>
+
+        <button id="delete-btn" class="delete-btn" style="display: none;">Xóa khối đang chọn</button>
+    </div>
+
+    <div id="canvas-container">
+        <div id="room-canvas">
+            </div>
+    </div>
+
+    <script>
+        const roomCanvas = document.getElementById('room-canvas');
+        const addBtn = document.getElementById('add-btn');
+        const deleteBtn = document.getElementById('delete-btn');
+        
+        // Inputs Thêm mới
+        const fName = document.getElementById('f-name');
+        const fWidth = document.getElementById('f-width');
+        const fHeight = document.getElementById('f-height');
+        const fColor = document.getElementById('f-color');
+
+        // Inputs Chỉnh sửa nhanh
+        const editWidth = document.getElementById('edit-width');
+        const editHeight = document.getElementById('edit-height');
+
+        let selectedBlock = null;
+
+        // Hàm thêm khối nội thất mới
+        addBtn.addEventListener('click', () => {
+            const name = fName.value.trim() || 'Vật dụng';
+            const width = parseInt(fWidth.value) || 100;
+            const height = parseInt(fHeight.value) || 100;
+            
+            const selectedOption = fColor.options[fColor.selectedIndex];
+            const bgColor = selectedOption.value;
+            const borderColor = selectedOption.getAttribute('data-border');
+
+            createFurnitureBlock(name, width, height, bgColor, borderColor);
+        });
+
+        function createFurnitureBlock(name, width, height, bgColor, borderColor) {
+            const block = document.createElement('div');
+            block.className = 'furniture-block';
+            
+            // Thiết lập kích thước (Tỷ lệ 10cm = 10px tương đương 1:1)
+            block.style.width = `${width}px`;
+            block.style.height = `${height}px`;
+            block.style.left = '50px'; // Vị trí xuất hiện mặc định
+            block.style.top = '50px';
+            block.style.backgroundColor = bgColor;
+            block.style.borderColor = borderColor;
+            block.setAttribute('data-border-orig', borderColor);
+
+            // Nội dung text hiển thị bên trong khối
+            const textSpan = document.createElement('span');
+            textSpan.innerText = name;
+            block.appendChild(textSpan);
+
+            // Badge hiển thị kích thước thật bên dưới khi click chọn
+            const badge = document.createElement('div');
+            badge.className = 'dimensions-badge';
+            badge.innerText = `${width} x ${height} cm`;
+            block.appendChild(badge);
+
+            // Lắng nghe sự kiện để Kéo thả (Drag and Drop)
+            setupDragAndDrop(block);
+
+            // Lắng nghe sự kiện click chọn khối
+            block.addEventListener('mousedown', (e) => {
+                selectBlock(block);
+            });
+
+            roomCanvas.appendChild(block);
+            selectBlock(block); // Tự động chọn luôn khối vừa tạo
+        }
+
+        // Xử lý logic Kéo thả vật thể
+        function setupDragAndDrop(block) {
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            block.addEventListener('mousedown', (e) => {
+                // Tránh xung đột kích hoạt kéo khi click chuột phải hoặc phần tử con khác
+                if (e.target.tagName === 'INPUT') return; 
+
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = parseInt(block.style.left) || 0;
+                initialTop = parseInt(block.style.top) || 0;
+
+                block.style.zIndex = 1000; // Đưa khối đang kéo lên trên cùng
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                
+                e.preventDefault();
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+
+                // Tính toán khoảng cách chuột đã di chuyển
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                // Tọa độ mới dự kiến
+                let newLeft = initialLeft + dx;
+                let newTop = initialTop + dy;
+
+                // Giới hạn không cho vật thể kéo ra khỏi biên của phòng (Room Canvas)
+                const maxLeft = roomCanvas.clientWidth - block.offsetWidth;
+                const maxTop = roomCanvas.clientHeight - block.offsetHeight;
+
+                if (newLeft < 0) newLeft = 0;
+                if (newTop < 0) newTop = 0;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                if (newTop > maxTop) newTop = maxTop;
+
+                block.style.left = `${newLeft}px`;
+                block.style.top = `${newTop}px`;
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                block.style.zIndex = ''; 
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        // Hàm chọn một khối để chỉnh sửa
+        function selectBlock(block) {
+            if (selectedBlock) {
+                selectedBlock.classList.remove('selected');
+                // Trả lại màu border gốc
+                selectedBlock.style.borderColor = selectedBlock.getAttribute('data-border-orig');
+            }
+
+            selectedBlock = block;
+            selectedBlock.classList.add('selected');
+
+            // Hiển thị nút xóa và mở khóa input sửa kích thước
+            deleteBtn.style.display = 'block';
+            editWidth.disabled = false;
+            editHeight.disabled = false;
+
+            // Đổ dữ liệu hiện tại của khối vào các input chỉnh sửa nhanh
+            editWidth.value = parseInt(selectedBlock.style.width);
+            editHeight.value = parseInt(selectedBlock.style.height);
+        }
+
+        // Hủy chọn khi click vào khoảng trống của phòng
+        roomCanvas.addEventListener('mousedown', (e) => {
+            if (e.target === roomCanvas) {
+                clearSelection();
+            }
+        });
+
+        function clearSelection() {
+            if (selectedBlock) {
+                selectedBlock.classList.remove('selected');
+                selectedBlock.style.borderColor = selectedBlock.getAttribute('data-border-orig');
+            }
+            selectedBlock = null;
+            deleteBtn.style.display = 'none';
+            editWidth.disabled = true;
+            editHeight.disabled = true;
+            editWidth.value = '';
+            editHeight.value = '';
+        }
+
+        // Lắng nghe sự kiện thay đổi kích thước nhanh từ bảng điều khiển
+        editWidth.addEventListener('input', updateCurrentBlockSize);
+        editHeight.addEventListener('input', updateCurrentBlockSize);
+
+        function updateCurrentBlockSize() {
+            if (!selectedBlock) return;
+
+            let newW = parseInt(editWidth.value) || 20;
+            let newH = parseInt(editHeight.value) || 20;
+
+            // Kiểm tra giới hạn kích thước tránh tràn phòng
+            const maxLeft = roomCanvas.clientWidth - parseInt(selectedBlock.style.left);
+            const maxTop = roomCanvas.clientHeight - parseInt(selectedBlock.style.top);
+
+            if (newW > maxLeft) newW = maxLeft;
+            if (newH > maxTop) newH = maxTop;
+
+            selectedBlock.style.width = `${newW}px`;
+            selectedBlock.style.height = `${newH}px`;
+
+            // Cập nhật text trên badge kích thước
+            const badge = selectedBlock.querySelector('.dimensions-badge');
+            if (badge) badge.innerText = `${newW} x ${newH} cm`;
+        }
+
+        // Xử lý sự kiện xóa khối
+        deleteBtn.addEventListener('click', () => {
+            if (selectedBlock) {
+                selectedBlock.remove();
+                clearSelection();
+            }
+        });
+    </script>
+</body>
+</html>
