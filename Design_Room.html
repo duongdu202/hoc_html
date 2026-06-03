@@ -130,7 +130,7 @@
         #apartment-layout {
             display: grid;
             grid-template-columns: 600px 250px; 
-            grid-template-rows: 200px 200px;    
+            grid-template-rows: 150px 150px 80px;    
             position: relative;
             background-color: #111827;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -165,21 +165,42 @@
             /* Giữ nguyên cấu trúc phân chia */
         }
 
-        /* Nhãn Cửa vào */
-        .entrance-label {
+        /* Style chung cho các loại nhãn cửa */
+        .door-label {
             position: absolute;
-            bottom: -14px;
-            left: 20px;
-            padding: 2px 12px;
-            background: #e11d48;
-            color: white;
-            font-size: 0.7rem;
+            padding: 2px 8px;
+            font-size: 0.65rem;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-radius: 3px;
             z-index: 5;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Vị trí Cửa vào chính */
+        .entrance-label {
+            bottom: -14px;
+            left: 20px;
+            background: #e11d48;
+            color: white;
             box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+        }
+
+        /* Vị trí Cửa WC (Nằm ở bức tường ngăn với Phòng chính) */
+        .toilet-door-label {
+            left: -12px;
+            top: 40px;
+            background: #10b981; /* Màu xanh lá để phân biệt */
+            color: #0f172a;
+        }
+
+        /* Vị trí Cửa Bếp (Nằm ở bức tường ngăn với Phòng chính) */
+        .kitchen-door-label {
+            left: -12px;
+            top: 40px;
+            background: #f59e0b; /* Màu vàng cam */
+            color: #0f172a;
         }
 
         /* Khối nội thất */
@@ -288,11 +309,17 @@
             
             <div id="main-room" class="room">Phòng chính</div>
             
-            <div id="toilet" class="room">Nhà vệ sinh</div>
+            <div id="toilet" class="room">
+                Nhà vệ sinh
+                <div class="door-label toilet-door-label">Cửa vào</div>
+            </div>
             
-            <div id="kitchen" class="room">Bếp</div>
+            <div id="kitchen" class="room">
+                Bếp
+                <div class="door-label kitchen-door-label">Cửa vào</div>
+            </div>
 
-            <div class="entrance-label">Cửa vào</div>
+            <div class="door-label entrance-label">Cửa chính</div>
 
         </div>
     </div>
